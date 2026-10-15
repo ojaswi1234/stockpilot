@@ -1,0 +1,51 @@
+name: StockPilot CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build, Test & Package Container
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stockpilot_db
+          POSTGRES_USER: stockpilot_user
+          POSTGRES_PASSWORD: stockpilot_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stockpilot_user -d stockpilot_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compile and Run Automated Verification
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/stockpilot_db
+          DB_USERNAME: stockpilot_user
+          DB_PASSWORD: stockpilot_pass
+        run: |
+          mvn clean verify -B
+
+      - name: Build Production Docker Container
+        run: |
+          docker build -t stockpilot:latest .

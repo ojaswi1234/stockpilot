@@ -1,18 +1,14 @@
 # Stage 1: Build stage
-FROM eclipse-temurin:21-jdk-alpine AS builder
-WORKDIR /workspace
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+WORKDIR /app
 
-# Copy Maven wrapper & pom.xml
-COPY mvnw .
-COPY .mvn .mvn
+# Cache dependencies
 COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-RUN chmod +x ./mvnw
-RUN ./mvnw dependency:go-offline -B
-
-# Copy source code and build
+# Copy source and compile
 COPY src src
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-alpine
@@ -21,10 +17,12 @@ WORKDIR /app
 # Create unprivileged application user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=builder /workspace/target/*.jar app.jar
-RUN chown -R appuser:appgroup /app
+COPY --from=builder --chown=appuser:appgroup /app/target/stockpilot-app.jar app.jar
 
 USER appuser
 EXPOSE 8083
 
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1
+
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

@@ -61,9 +61,13 @@ All demo accounts share the password: `Password123!`
 
 ## 4. Quickstart Guide
 
-### Option A: Running with Docker Compose (Recommended for Production)
+### Option A: Running with Docker Compose (Recommended)
 
 ```bash
+# Modern Docker Compose V2 (recommended, standard in Cloud Shell & modern Linux/Mac/Windows)
+docker compose up --build
+
+# Or legacy Docker Compose V1
 docker-compose up --build
 ```
 The application will launch on `http://localhost:8083`.
