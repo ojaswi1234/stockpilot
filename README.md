@@ -6,6 +6,15 @@ It solves the classic e-commerce overselling problem under high concurrency usin
 
 ---
 
+## Application Preview
+
+### 📦 Real-Time Multi-Warehouse Inventory & Movement Ledger (`ROLE_ADMIN` / `ROLE_WAREHOUSE_MANAGER`)
+Live multi-warehouse stock monitoring across regional distribution centers (`WH-EAST`, `WH-WEST`), dynamic STOMP low-stock alerts, inventory valuations, and immutable double-entry movement audit ledger.
+
+![StockPilot Multi-Warehouse Inventory Dashboard](docs/screenshots/stockpilot_inventory_dashboard.png)
+
+---
+
 ## 1. Key Architectural Features
 
 - **Pessimistic Concurrency Control**: Guarantees zero overselling when multiple concurrent orders compete for limited stock via `SELECT ... FOR UPDATE` row locks.
